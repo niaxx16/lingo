@@ -56,6 +56,16 @@ npm test
 **Ayarlar:** kelime başına süre (süresiz / 60 / 90 / 120 sn), sözlük kontrolü (sıkı / esnek), ses.
 Ayarlar ve rekorlar tarayıcıda (`localStorage`) saklanır.
 
+## Yayınlama (Vercel)
+
+Proje statik bir sitedir; derleme adımı yoktur. `vercel.json` bunu Vercel'e bildirir
+(çerçeve yok, derleme ve kurulum komutu boş, çıktı dizini kök).
+
+1. <https://vercel.com/new> adresinde GitHub hesabını bağla ve `lingo` reposunu içe aktar.
+2. Ayarlara dokunmadan **Deploy**'a bas.
+
+Bundan sonra üretim dalına yapılan her push otomatik yayınlanır; diğer dallar önizleme bağlantısı alır.
+
 ## Mimari
 
 ```
