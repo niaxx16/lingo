@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#0b0d24" />
+    <meta name="description" content="Harfiyen: ilk harfi açık, 4'ten 7 harfe tırmanan Türkçe kelime tahmin oyunu." />
+    <title>Harfiyen — Türkçe Kelime Yarışması</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23e5203a'/%3E%3Ctext x='32' y='46' font-family='Arial' font-weight='900' font-size='40' text-anchor='middle' fill='white'%3EH%3C/text%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="topbar">
+        <div class="brand" aria-label="Harfiyen">
+          <span class="brand-tile">H</span><span class="brand-rest">ARFİYEN</span>
+        </div>
+        <div class="stats" aria-live="polite">
+          <div class="stat"><span class="stat-label">Puan</span><span class="stat-value" id="score">0</span></div>
+          <div class="stat"><span class="stat-label">Seri</span><span class="stat-value" id="streak">0</span></div>
+          <div class="stat"><span class="stat-label">Tur</span><span class="stat-value" id="round">—</span></div>
+        </div>
+        <div class="actions">
+          <button class="icon-btn" id="soundBtn" type="button" aria-label="Sesi kapat" aria-pressed="true">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor" />
+              <path class="sound-on" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+              <path class="sound-off" d="M16.5 9.5l5 5m0-5l-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+            </svg>
+          </button>
+          <button class="icon-btn" id="helpBtn" type="button" aria-label="Nasıl oynanır">?</button>
+          <button class="icon-btn" id="menuBtn" type="button" aria-label="Yeni oyun ve ayarlar">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" /></svg>
+          </button>
+        </div>
+      </header>
+
+      <div class="timer" id="timer" role="timer" aria-label="Kalan süre">
+        <div class="timer-track"><div class="timer-fill" id="timerFill"></div></div>
+        <span class="timer-text" id="timerText"></span>
+      </div>
+
+      <main class="stage">
+        <div class="progress" id="progress"></div>
+        <div class="board" id="board" role="grid" aria-label="Tahmin tablosu"></div>
+        <div class="toast" id="toast" role="status" aria-live="assertive"></div>
+        <div class="jokers">
+          <button class="joker" id="jokerReveal" type="button">
+            <span class="joker-icon" aria-hidden="true">✦</span> Harf Aç <span class="joker-count" id="jokerRevealCount">1</span>
+          </button>
+          <button class="joker" id="jokerEliminate" type="button">
+            <span class="joker-icon" aria-hidden="true">✕</span> Harf Ele <span class="joker-count" id="jokerEliminateCount">1</span>
+          </button>
+        </div>
+      </main>
+
+      <div class="keyboard" id="keyboard" aria-label="Türkçe klavye"></div>
+    </div>
+
+    <!-- Yeni oyun / ayarlar -->
+    <div class="modal" id="startModal" role="dialog" aria-modal="true" aria-labelledby="startTitle" hidden>
+      <div class="card">
+        <button class="close" type="button" data-close aria-label="Kapat" hidden>×</button>
+        <h2 id="startTitle">Yeni Oyun</h2>
+        <div class="modes" role="radiogroup" aria-label="Oyun modu">
+          <button class="mode" type="button" role="radio" data-mode="ladder">
+            <strong>Yarışma</strong>
+            <span id="ladderDesc">4 → 5 → 6 → 7 harf. Her turda 2 kelime, 3 can.</span>
+          </button>
+          <button class="mode" type="button" role="radio" data-mode="practice">
+            <strong>Pratik</strong>
+            <span>Sabit harf sayısı, can yok, bitmeyen kelimeler.</span>
+          </button>
+        </div>
+
+        <div class="option" id="lengthOption">
+          <span class="option-label">Harf sayısı</span>
+          <div class="chips" id="lengthChips" role="radiogroup" aria-label="Harf sayısı">
+            <button type="button" class="chip" role="radio" data-length="4">4</button>
+            <button type="button" class="chip" role="radio" data-length="5">5</button>
+            <button type="button" class="chip" role="radio" data-length="6">6</button>
+            <button type="button" class="chip" role="radio" data-length="7">7</button>
+          </div>
+        </div>
+        <label class="option" id="include7Option">
+          <span class="option-label">7 harfli final turu</span>
+          <input type="checkbox" id="include7" />
+        </label>
+        <label class="option">
+          <span class="option-label">Kelime başına süre</span>
+          <select id="timerSelect">
+            <option value="0">Süresiz</option>
+            <option value="60">60 sn</option>
+            <option value="90">90 sn</option>
+            <option value="120">120 sn</option>
+          </select>
+        </label>
+        <label class="option">
+          <span class="option-label">Sözlük kontrolü</span>
+          <select id="validationSelect">
+            <option value="strict">Sıkı — sözlükte olmalı</option>
+            <option value="lenient">Esnek — her harf dizisi</option>
+          </select>
+        </label>
+        <p class="best" id="bestLine"></p>
+        <button class="primary" id="startBtn" type="button" data-primary>Başla</button>
+      </div>
+    </div>
+
+    <!-- Nasıl oynanır -->
+    <div class="modal" id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpTitle" hidden>
+      <div class="card">
+        <button class="close" type="button" data-close aria-label="Kapat">×</button>
+        <h2 id="helpTitle">Nasıl Oynanır?</h2>
+        <ul class="rules">
+          <li>Gizli kelimenin <strong>ilk harfi</strong> açık gelir. Kelimeyi <strong>5 denemede</strong> ve süre dolmadan bul.</li>
+          <li>Her tahmin, o harfle başlayan gerçek bir kelime olmalı. Geçersiz tahmin hak götürmez.</li>
+        </ul>
+        <div class="legend">
+          <div class="legend-row"><span class="tile correct mini">K</span><span>Doğru harf, doğru yerde</span></div>
+          <div class="legend-row"><span class="tile present mini">A</span><span>Kelimede var, yeri yanlış</span></div>
+          <div class="legend-row"><span class="tile absent mini">Z</span><span>Kelimede yok</span></div>
+        </div>
+        <ul class="rules">
+          <li>Aynı harf kelimede kaç kez geçiyorsa en fazla o kadar renklenir.</li>
+          <li><strong>Yarışma:</strong> 4 harfle başlar; her harf sayısında 2 kelime bilince bir üst tura çıkarsın. Bilemediğin her kelime 1 can götürür.</li>
+          <li><strong>Jokerler:</strong> “Harf Aç” kapalı bir harfi gösterir, “Harf Ele” kelimede olmayan 5 harfi klavyeden siler.</li>
+          <li><strong>Puan:</strong> az deneme, kalan süre ve üst üste bilinen kelimeler (seri) daha çok kazandırır.</li>
+          <li>Klavye: harfler, <kbd>Enter</kbd> ve <kbd>⌫</kbd>. Türkçe olmayan klavyede <kbd>i</kbd> → İ, <kbd>Shift</kbd>+<kbd>i</kbd> → I.</li>
+        </ul>
+        <button class="primary" type="button" data-close data-primary>Anladım</button>
+      </div>
+    </div>
+
+    <!-- Tur sonu / oyun sonu -->
+    <div class="modal" id="resultModal" role="dialog" aria-modal="true" aria-labelledby="resultTitle" hidden>
+      <div class="card result">
+        <p class="result-kicker" id="resultKicker"></p>
+        <h2 id="resultTitle"></h2>
+        <div class="result-word" id="resultWord"></div>
+        <p class="result-meaning" id="resultMeaning"></p>
+        <div class="result-stats" id="resultStats"></div>
+        <p class="result-note" id="resultNote"></p>
+        <div class="result-actions">
+          <button class="primary" id="resultPrimary" type="button" data-primary></button>
+          <button class="secondary" id="resultSecondary" type="button"></button>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="src/main.js"></script>
+  </body>
+</html>
