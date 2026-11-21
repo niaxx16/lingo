@@ -1,0 +1,15 @@
+{
+  "name": "harfiyen",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Türkçe kelime tahmin oyunu: ilk harf açık, kademeli 4-7 harf, süre ve jokerler.",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test",
+    "build:dict": "node scripts/build-dictionary.mjs"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
